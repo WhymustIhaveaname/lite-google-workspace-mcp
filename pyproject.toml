@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "workspace-mcp-lite"
+name = "lite-google-workspace-mcp"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-workspace-mcp-lite = "workspace_mcp_lite.cli:main"
+lite-google-workspace-mcp = "lite_google_workspace_mcp.cli:main"
 
 [project.optional-dependencies]
 dev = [

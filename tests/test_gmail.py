@@ -1,6 +1,6 @@
 import base64
 
-from workspace_mcp_lite.gmail import (
+from lite_google_workspace_mcp.gmail import (
     extract_attachments,
     extract_headers,
     extract_message_bodies,

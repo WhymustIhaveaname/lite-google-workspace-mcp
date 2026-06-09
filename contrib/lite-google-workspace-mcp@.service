@@ -1,11 +1,11 @@
 [Unit]
-Description=workspace-mcp-lite (%i)
+Description=lite-google-workspace-mcp (%i)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=%h/Codes/workspace-mcp-lite/.venv/bin/workspace-mcp-lite serve --account %i
+ExecStart=%h/Codes/lite-google-workspace-mcp/.venv/bin/lite-google-workspace-mcp serve --account %i
 Restart=on-failure
 RestartSec=5
 

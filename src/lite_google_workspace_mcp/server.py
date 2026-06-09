@@ -3,9 +3,9 @@ import logging
 from googleapiclient.discovery import build
 from mcp.server.fastmcp import FastMCP
 
-from workspace_mcp_lite.auth import TokenManager
-from workspace_mcp_lite.calendar import register_calendar_tools
-from workspace_mcp_lite.gmail import register_gmail_tools
+from lite_google_workspace_mcp.auth import TokenManager
+from lite_google_workspace_mcp.calendar import register_calendar_tools
+from lite_google_workspace_mcp.gmail import register_gmail_tools
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,8 @@ def create_server(account: str, port: int) -> FastMCP:
     creds = manager.build_credentials(account)
     if creds is None:
         raise RuntimeError(
-            f"No credentials for account '{account}'. Run: workspace-mcp-lite auth {account}"
+            f"No credentials for account '{account}'. "
+            f"Run: lite-google-workspace-mcp auth {account}"
         )
 
     manager.refresh_if_needed(creds, account)

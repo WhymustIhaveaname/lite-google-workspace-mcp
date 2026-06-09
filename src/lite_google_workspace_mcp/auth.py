@@ -12,11 +12,11 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 
-from workspace_mcp_lite.responses import error_html, success_html
+from lite_google_workspace_mcp.responses import error_html, success_html
 
 logger = logging.getLogger(__name__)
 
-CONFIG_DIR = Path.home() / ".config" / "workspace-mcp-lite"
+CONFIG_DIR = Path.home() / ".config" / "lite-google-workspace-mcp"
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.modify",
@@ -67,7 +67,7 @@ class TokenManager:
         if not creds.refresh_token:
             raise RuntimeError(
                 f"No refresh token for account '{account}'. "
-                f"Re-run: workspace-mcp-lite auth {account}"
+                f"Re-run: lite-google-workspace-mcp auth {account}"
             )
         creds.refresh(Request())
         self._save_credentials(account, creds)

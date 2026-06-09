@@ -2,12 +2,12 @@ from unittest.mock import patch
 
 import pytest
 
-from workspace_mcp_lite.auth import TokenManager
+from lite_google_workspace_mcp.auth import TokenManager
 
 
 @pytest.fixture
 def tmp_config(tmp_path, monkeypatch):
-    monkeypatch.setattr("workspace_mcp_lite.auth.CONFIG_DIR", tmp_path)
+    monkeypatch.setattr("lite_google_workspace_mcp.auth.CONFIG_DIR", tmp_path)
     return tmp_path
 
 
@@ -57,7 +57,7 @@ class TestTokenManager:
         result = token_manager.build_credentials("nonexistent")
         assert result is None
 
-    @patch("workspace_mcp_lite.auth.Request")
+    @patch("lite_google_workspace_mcp.auth.Request")
     def test_refresh_expired_credentials(self, mock_request_cls, token_manager):
         token_data = {
             "token": "expired",

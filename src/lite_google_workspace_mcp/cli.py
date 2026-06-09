@@ -3,7 +3,7 @@ import logging
 import sys
 import tomllib
 
-from workspace_mcp_lite.auth import CONFIG_DIR, run_auth_flow
+from lite_google_workspace_mcp.auth import CONFIG_DIR, run_auth_flow
 
 
 def _load_account_port(account: str) -> int | None:
@@ -37,14 +37,14 @@ def cmd_serve(args: argparse.Namespace) -> None:
         )
         sys.exit(1)
 
-    from workspace_mcp_lite.server import create_server
+    from lite_google_workspace_mcp.server import create_server
 
     server = create_server(account, port)
     server.run(transport="streamable-http")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="workspace-mcp-lite")
+    parser = argparse.ArgumentParser(prog="lite-google-workspace-mcp")
     sub = parser.add_subparsers(dest="command", required=True)
 
     auth_parser = sub.add_parser("auth", help="Authorize a Google account")

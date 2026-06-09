@@ -1,4 +1,4 @@
-from workspace_mcp_lite.calendar import (
+from lite_google_workspace_mcp.calendar import (
     correct_time_format,
     format_attachment_details,
     format_attendee_details,
