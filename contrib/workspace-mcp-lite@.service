@@ -1,0 +1,13 @@
+[Unit]
+Description=workspace-mcp-lite (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/Codes/workspace-mcp-lite/.venv/bin/workspace-mcp-lite serve --account %i
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
