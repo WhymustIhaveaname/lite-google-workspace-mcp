@@ -1,6 +1,6 @@
 import json
 import logging
-import socket
+import os
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -12,7 +12,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 
-from lite_google_workspace_mcp.responses import error_html, success_html
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 logger = logging.getLogger(__name__)
 
@@ -89,10 +90,8 @@ class TokenManager:
         return self.config_dir / "client_secret.json"
 
 
-def _find_free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+AUTH_PORT = 8000
+AUTH_REDIRECT_URI = f"http://localhost:{AUTH_PORT}/oauth2callback"
 
 
 def run_auth_flow(account: str, config_dir: Path = CONFIG_DIR) -> str:
@@ -105,15 +104,11 @@ def run_auth_flow(account: str, config_dir: Path = CONFIG_DIR) -> str:
             "Download it from GCP Console > APIs & Services > Credentials."
         )
 
-    port = _find_free_port()
-    redirect_uri = f"http://localhost:{port}/oauth2callback"
-
     flow = Flow.from_client_secrets_file(
         str(client_secret_path),
         scopes=SCOPES,
-        redirect_uri=redirect_uri,
+        redirect_uri=AUTH_REDIRECT_URI,
     )
-
     auth_url, _ = flow.authorization_url(access_type="offline", prompt="consent")
 
     result: dict[str, Any] = {}
@@ -128,20 +123,19 @@ def run_auth_flow(account: str, config_dir: Path = CONFIG_DIR) -> str:
 
             params = parse_qs(parsed.query)
             if "error" in params:
-                err_msg = params["error"][0]
                 self.send_response(400)
-                self.send_header("Content-Type", "text/html")
+                self.send_header("Content-Type", "text/plain")
                 self.end_headers()
-                self.wfile.write(error_html(err_msg).encode())
-                result["error"] = err_msg
+                self.wfile.write(params["error"][0].encode())
+                result["error"] = params["error"][0]
                 return
 
             code = params.get("code", [""])[0]
             if not code:
                 self.send_response(400)
-                self.send_header("Content-Type", "text/html")
+                self.send_header("Content-Type", "text/plain")
                 self.end_headers()
-                self.wfile.write(error_html("No authorization code received.").encode())
+                self.wfile.write(b"No authorization code received.")
                 result["error"] = "No authorization code"
                 return
 
@@ -150,28 +144,28 @@ def run_auth_flow(account: str, config_dir: Path = CONFIG_DIR) -> str:
                 creds = flow.credentials
                 email = _get_email_from_credentials(creds)
                 manager._save_credentials(account, creds)
-
                 self.send_response(200)
-                self.send_header("Content-Type", "text/html")
+                self.send_header("Content-Type", "text/plain")
                 self.end_headers()
-                self.wfile.write(success_html(email).encode())
+                self.wfile.write(f"Authorized as {email}. You can close this tab.".encode())
                 result["email"] = email
             except Exception as e:
                 self.send_response(500)
-                self.send_header("Content-Type", "text/html")
+                self.send_header("Content-Type", "text/plain")
                 self.end_headers()
-                self.wfile.write(error_html(str(e)).encode())
+                self.wfile.write(str(e).encode())
                 result["error"] = str(e)
 
         def log_message(self, format, *args):
             logger.debug(format, *args)
 
-    server = HTTPServer(("127.0.0.1", port), CallbackHandler)
+    server = HTTPServer(("127.0.0.1", AUTH_PORT), CallbackHandler)
     server_thread = Thread(target=server.handle_request, daemon=True)
     server_thread.start()
 
+    print(f"\nAuthorization URL:\n{auth_url}\n")
     webbrowser.open(auth_url)
-    logger.info("Opened browser for Google authorization. Waiting for callback...")
+    print(f"Waiting for callback on port {AUTH_PORT}...")
 
     server_thread.join(timeout=120)
     server.server_close()
