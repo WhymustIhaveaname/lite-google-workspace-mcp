@@ -40,9 +40,12 @@ port = 8001
 
 [accounts.work]
 port = 8002
+allowed_recipients = ["boss@company.com", "team@company.com"]
 ```
 
 The account name is just a label you choose. It maps to a token file and a port.
+
+`allowed_recipients` is optional. When set, `send_gmail_message` and `draft_gmail_message` will only allow sending to the listed addresses (checked against to/cc/bcc, case-insensitive). Omit it to allow sending to anyone.
 
 ### 2. Authorize accounts
 
