@@ -17,6 +17,26 @@ GMAIL_REQUEST_DELAY = 0.1
 HTML_BODY_TRUNCATE_LIMIT = 20000
 RAW_BODY_TRUNCATE_LIMIT = 20000
 
+
+def check_allowed_recipients(
+    allowed: list[str], to: str | None, cc: str | None, bcc: str | None
+) -> list[str]:
+    """Return list of disallowed addresses. Empty means all OK."""
+    if not allowed:
+        return []
+    import email.utils
+
+    allowed_lower = {a.lower() for a in allowed}
+    disallowed = []
+    for field in (to, cc, bcc):
+        if not field:
+            continue
+        for _, addr in email.utils.getaddresses([field]):
+            if addr and addr.lower() not in allowed_lower:
+                disallowed.append(addr)
+    return disallowed
+
+
 METADATA_HEADERS = [
     "Subject",
     "From",
@@ -442,7 +462,9 @@ def prepare_gmail_message(
 # ---------------------------------------------------------------------------
 
 
-def register_gmail_tools(server, service) -> None:
+def register_gmail_tools(server, service, allowed_recipients: list[str] | None = None) -> None:
+    _allowed = allowed_recipients or []
+
     @server.tool()
     async def search_gmail_messages(
         query: str,
@@ -700,6 +722,9 @@ def register_gmail_tools(server, service) -> None:
         attachments: list[dict[str, str]] | None = None,
     ) -> str:
         """Send an email via Gmail. Supports replies and attachments."""
+        bad = check_allowed_recipients(_allowed, to, cc, bcc)
+        if bad:
+            return f"Blocked: recipients not in allowed list: {', '.join(bad)}"
         raw, tid, count, errors = prepare_gmail_message(
             subject=subject,
             body=body,
@@ -742,6 +767,9 @@ def register_gmail_tools(server, service) -> None:
         attachments: list[dict[str, str]] | None = None,
     ) -> str:
         """Create a draft email in Gmail."""
+        bad = check_allowed_recipients(_allowed, to, cc, bcc)
+        if bad:
+            return f"Blocked: recipients not in allowed list: {', '.join(bad)}"
         raw, tid, count, errors = prepare_gmail_message(
             subject=subject,
             body=body,

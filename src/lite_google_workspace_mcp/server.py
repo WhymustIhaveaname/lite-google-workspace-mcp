@@ -10,7 +10,7 @@ from lite_google_workspace_mcp.gmail import register_gmail_tools
 logger = logging.getLogger(__name__)
 
 
-def create_server(account: str, port: int) -> FastMCP:
+def create_server(account: str, port: int, allowed_recipients: list[str] | None = None) -> FastMCP:
     manager = TokenManager()
     creds = manager.build_credentials(account)
     if creds is None:
@@ -30,7 +30,7 @@ def create_server(account: str, port: int) -> FastMCP:
         port=port,
     )
 
-    register_gmail_tools(server, gmail_service)
+    register_gmail_tools(server, gmail_service, allowed_recipients=allowed_recipients)
     register_calendar_tools(server, calendar_service)
 
     logger.info("Registered 21 tools for account '%s' on port %d", account, port)

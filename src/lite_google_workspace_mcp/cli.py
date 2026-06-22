@@ -6,13 +6,13 @@ import tomllib
 from lite_google_workspace_mcp.auth import CONFIG_DIR, run_auth_flow
 
 
-def _load_account_port(account: str) -> int | None:
+def _load_account_config(account: str) -> dict:
     config_path = CONFIG_DIR / "config.toml"
     if not config_path.exists():
-        return None
+        return {}
     with open(config_path, "rb") as f:
         config = tomllib.load(f)
-    return config.get("accounts", {}).get(account, {}).get("port")
+    return config.get("accounts", {}).get(account, {})
 
 
 def cmd_auth(args: argparse.Namespace) -> None:
@@ -29,7 +29,8 @@ def cmd_serve(args: argparse.Namespace) -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
     account = args.account
-    port = args.port or _load_account_port(account)
+    acct_config = _load_account_config(account)
+    port = args.port or acct_config.get("port")
     if port is None:
         print(
             f"Error: No port specified. Use --port or set it in {CONFIG_DIR}/config.toml",
@@ -39,7 +40,8 @@ def cmd_serve(args: argparse.Namespace) -> None:
 
     from lite_google_workspace_mcp.server import create_server
 
-    server = create_server(account, port)
+    allowed = acct_config.get("allowed_recipients")
+    server = create_server(account, port, allowed_recipients=allowed)
     server.run(transport="streamable-http")
 
 

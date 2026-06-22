@@ -1,6 +1,7 @@
 import base64
 
 from lite_google_workspace_mcp.gmail import (
+    check_allowed_recipients,
     extract_attachments,
     extract_headers,
     extract_message_bodies,
@@ -11,6 +12,31 @@ from lite_google_workspace_mcp.gmail import (
     html_to_text,
     prepare_gmail_message,
 )
+
+
+class TestCheckAllowedRecipients:
+    def test_empty_allowlist_permits_all(self):
+        assert check_allowed_recipients([], "anyone@example.com", None, None) == []
+
+    def test_allowed(self):
+        assert check_allowed_recipients(["a@x.com"], "a@x.com", None, None) == []
+
+    def test_blocked(self):
+        assert check_allowed_recipients(["a@x.com"], "b@x.com", None, None) == ["b@x.com"]
+
+    def test_case_insensitive(self):
+        assert check_allowed_recipients(["A@X.COM"], "a@x.com", None, None) == []
+
+    def test_cc_bcc_checked(self):
+        bad = check_allowed_recipients(["a@x.com"], "a@x.com", "b@x.com", "c@x.com")
+        assert sorted(bad) == ["b@x.com", "c@x.com"]
+
+    def test_display_name_parsed(self):
+        assert check_allowed_recipients(["a@x.com"], "Alice <a@x.com>", None, None) == []
+
+    def test_multiple_in_field(self):
+        bad = check_allowed_recipients(["a@x.com"], "a@x.com, b@x.com", None, None)
+        assert bad == ["b@x.com"]
 
 
 class TestHtmlToText:
