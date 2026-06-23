@@ -59,7 +59,6 @@ class TokenManager:
             token_uri=data.get("token_uri", "https://oauth2.googleapis.com/token"),
             client_id=data.get("client_id"),
             client_secret=data.get("client_secret"),
-            scopes=data.get("scopes"),
         )
 
     def refresh_if_needed(self, creds: Credentials, account: str) -> None:
