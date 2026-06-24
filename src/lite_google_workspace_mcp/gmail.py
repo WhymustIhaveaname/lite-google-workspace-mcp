@@ -767,9 +767,9 @@ def register_gmail_tools(server, service, allowed_recipients: list[str] | None =
         attachments: list[dict[str, str]] | None = None,
     ) -> str:
         """Create a draft email in Gmail."""
-        bad = check_allowed_recipients(_allowed, to, cc, bcc)
-        if bad:
-            return f"Blocked: recipients not in allowed list: {', '.join(bad)}"
+        # Drafts are never delivered, so the recipient allowlist (a guard
+        # against accidental sends) does not apply here. It is enforced only
+        # at actual send time, in send_gmail_message.
         raw, tid, count, errors = prepare_gmail_message(
             subject=subject,
             body=body,

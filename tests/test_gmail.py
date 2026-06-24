@@ -1,4 +1,5 @@
 import base64
+from unittest.mock import MagicMock
 
 from lite_google_workspace_mcp.gmail import (
     check_allowed_recipients,
@@ -11,6 +12,7 @@ from lite_google_workspace_mcp.gmail import (
     format_thread_content,
     html_to_text,
     prepare_gmail_message,
+    register_gmail_tools,
 )
 
 
@@ -212,3 +214,40 @@ class TestFormatThreadContent:
     def test_empty_thread(self):
         result = format_thread_content({"messages": []}, "t1")
         assert "No messages" in result
+
+
+class TestRecipientAllowlistEnforcement:
+    """The allowlist guards real sends only. A draft is never delivered, so
+    creating one must not be blocked by it."""
+
+    @staticmethod
+    def _register_tools(allowed):
+        captured: dict = {}
+
+        class _Server:
+            def tool(self):
+                def decorator(fn):
+                    captured[fn.__name__] = fn
+                    return fn
+
+                return decorator
+
+        service = MagicMock()
+        service.users().drafts().create().execute.return_value = {"id": "draft1"}
+        register_gmail_tools(_Server(), service, allowed_recipients=allowed)
+        return captured
+
+    async def test_draft_skips_allowlist(self):
+        tools = self._register_tools(["only@allowed.com"])
+        result = await tools["draft_gmail_message"](
+            subject="s", body="b", to="outsider@example.com"
+        )
+        assert "Draft created" in result
+        assert "Blocked" not in result
+
+    async def test_send_still_enforces_allowlist(self):
+        tools = self._register_tools(["only@allowed.com"])
+        result = await tools["send_gmail_message"](
+            to="outsider@example.com", subject="s", body="b"
+        )
+        assert "Blocked" in result
