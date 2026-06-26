@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import webbrowser
+from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from threading import Thread
@@ -32,6 +33,15 @@ SCOPES = [
 ]
 
 
+def _parse_expiry(expiry: str | None) -> datetime | None:
+    if not expiry:
+        return None
+    parsed = datetime.fromisoformat(expiry)
+    if parsed.tzinfo is not None:
+        return parsed.astimezone(UTC).replace(tzinfo=None)
+    return parsed
+
+
 class TokenManager:
     def __init__(self, config_dir: Path = CONFIG_DIR):
         self.config_dir = config_dir
@@ -53,13 +63,19 @@ class TokenManager:
         data = self.load_token_data(account)
         if data is None:
             return None
-        return Credentials(
+        creds = Credentials(
             token=data.get("token"),
             refresh_token=data.get("refresh_token"),
             token_uri=data.get("token_uri", "https://oauth2.googleapis.com/token"),
             client_id=data.get("client_id"),
             client_secret=data.get("client_secret"),
         )
+        expiry = _parse_expiry(data.get("expiry"))
+        if expiry:
+            creds.expiry = expiry
+        elif data.get("token"):
+            creds.expiry = datetime.now(UTC).replace(tzinfo=None) - timedelta(seconds=1)
+        return creds
 
     def refresh_if_needed(self, creds: Credentials, account: str) -> None:
         if creds.valid:
@@ -73,17 +89,25 @@ class TokenManager:
         self._save_credentials(account, creds)
 
     def _save_credentials(self, account: str, creds: Credentials) -> None:
-        self.save_token(
-            account,
-            {
-                "token": creds.token,
-                "refresh_token": creds.refresh_token,
-                "token_uri": creds.token_uri,
-                "client_id": creds.client_id,
-                "client_secret": creds.client_secret,
-                "scopes": list(creds.scopes) if creds.scopes else [],
-            },
-        )
+        scopes = list(creds.scopes) if creds.scopes else []
+        if not scopes:
+            existing = self.load_token_data(account) or {}
+            scopes = existing.get("scopes", [])
+
+        data = {
+            "token": creds.token,
+            "refresh_token": creds.refresh_token,
+            "token_uri": creds.token_uri,
+            "client_id": creds.client_id,
+            "client_secret": creds.client_secret,
+            "scopes": scopes,
+        }
+        if creds.expiry:
+            expiry = creds.expiry
+            if expiry.tzinfo is not None:
+                expiry = expiry.astimezone(UTC)
+            data["expiry"] = expiry.isoformat()
+        self.save_token(account, data)
 
     def get_client_secret_path(self) -> Path:
         return self.config_dir / "client_secret.json"
