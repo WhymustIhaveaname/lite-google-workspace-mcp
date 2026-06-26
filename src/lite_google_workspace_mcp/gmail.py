@@ -724,7 +724,10 @@ def register_gmail_tools(server, service, allowed_recipients: list[str] | None =
         """Send an email via Gmail. Supports replies and attachments."""
         bad = check_allowed_recipients(_allowed, to, cc, bcc)
         if bad:
-            return f"Blocked: recipients not in allowed list: {', '.join(bad)}"
+            return (
+                f"Blocked: recipients not in allowed list: {', '.join(bad)}. "
+                "To create a draft instead, use draft_gmail_message."
+            )
         raw, tid, count, errors = prepare_gmail_message(
             subject=subject,
             body=body,

@@ -2,6 +2,8 @@
 
 Lightweight MCP server for Gmail and Google Calendar. Each Google account runs as an independent process on its own port.
 
+Important safety feature: direct Gmail sends can be restricted with a per-account `allowed_recipients` list. The allowlist applies only to `send_gmail_message`; `draft_gmail_message` stays unrestricted so agents can prepare drafts for human review without being able to send them.
+
 ## How it works
 
 ```

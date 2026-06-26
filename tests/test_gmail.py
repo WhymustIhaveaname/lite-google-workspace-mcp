@@ -251,3 +251,4 @@ class TestRecipientAllowlistEnforcement:
             to="outsider@example.com", subject="s", body="b"
         )
         assert "Blocked" in result
+        assert "draft_gmail_message" in result
