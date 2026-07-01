@@ -96,6 +96,12 @@ uv run lite-google-workspace-mcp auth myaccount
 systemctl --user start lite-google-workspace-mcp@myaccount
 ```
 
+### Tokens expiring every 7 days
+
+If the OAuth consent screen has an external user type and a Testing publishing status, Google expires every refresh token 7 days after consent (this applies to any scope beyond basic profile/email). The service then fails to start with `invalid_grant: Token has been expired or revoked`, and re-authorizing only resets the 7-day clock.
+
+The fix is to publish the app to production: GCP Console > APIs & Services > OAuth consent screen > Publish app. Production refresh tokens don't expire on a timer. With restricted Gmail scopes you'll see an "unverified app" warning until verification, which is harmless for personal or self-hosted use.
+
 ## Tools
 
 ### Gmail (14 tools)
