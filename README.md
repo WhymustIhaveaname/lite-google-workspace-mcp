@@ -98,7 +98,7 @@ systemctl --user start lite-google-workspace-mcp@myaccount
 
 ## Tools
 
-### Gmail (13 tools)
+### Gmail (14 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -117,15 +117,15 @@ systemctl --user start lite-google-workspace-mcp@myaccount
 | modify_gmail_message_labels | Add/remove labels on a message |
 | batch_modify_gmail_message_labels | Bulk label modification |
 
-### Calendar (8 tools)
+### Calendar (7 tools)
 
 | Tool | Description |
 |------|-------------|
 | list_calendars | List all calendars |
-| get_events | Query events by time range |
-| manage_event | Create/update/delete events |
-| manage_out_of_office | Create/update/delete OOO blocks |
-| manage_focus_time | Create/update/delete focus time |
+| get_events | Get events by ID or time range |
+| manage_event | Create/update/delete/RSVP to events |
+| manage_out_of_office | Create/list/update/delete OOO blocks |
+| manage_focus_time | Create/list/update/delete focus time |
 | query_freebusy | Check availability |
 | create_calendar | Create a new calendar |
 
